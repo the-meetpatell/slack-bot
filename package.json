@@ -2,5 +2,10 @@
   "name": "finanshels-lead-bot",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node --check api/slack.js && node scripts/verify.js"
+  }
 }
