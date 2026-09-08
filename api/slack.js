@@ -60,6 +60,7 @@ const SERVICES = [
   { t: 'FinCore General', v: 'FinCore General' },
   { t: 'Fractional CFO Services', v: 'Fractional CFO Services' },
   { t: 'FTA Amendments', v: 'FTA Amendments' },
+  { t: 'License Renewal', v: 'License Renewal' },
   { t: 'Liquidation', v: 'Liquidation' },
   { t: 'Management Accounting', v: 'Management Accounting' },
   { t: 'Monthly Accounting', v: 'Monthly Accounting' },
