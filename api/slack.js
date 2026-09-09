@@ -75,6 +75,7 @@ const SERVICES = [
   { t: 'VAT Filing - 100txn', v: 'VAT Filing - 100txn' },
   { t: 'VAT Filing - 500txn', v: 'VAT Filing - 500txn' },
   { t: 'VAT Registration', v: 'VAT Registration' },
+  { t: 'VAT Tax Refund', v: 'VAT Tax Refund' },
   { t: 'Virtual CFO Services', v: 'Virtual CFO Services' },
 ];
 
