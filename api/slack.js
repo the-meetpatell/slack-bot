@@ -78,6 +78,7 @@ const SERVICES = [
   { t: 'VAT Registration', v: 'VAT Registration' },
   { t: 'VAT Tax Refund', v: 'VAT Tax Refund' },
   { t: 'Virtual CFO Services', v: 'Virtual CFO Services' },
+  { t: 'Visa Process', v: 'Visa Process' },
 ];
 
 // ---------- helpers ----------
