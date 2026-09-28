@@ -11,8 +11,17 @@ const ZOHO_API_URL = process.env.ZOHO_API_URL || 'https://www.zohoapis.com';
 const LEAD_SOURCE = process.env.LEAD_SOURCE || 'Ops Team';
 const DEAL_STAGE = process.env.DEAL_STAGE || 'Qualification';
 const DEAL_PIPELINE = process.env.DEAL_PIPELINE || 'General Sales';
-// #internal-client-refferals — where /refer is allowed and summaries are posted.
-const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID || 'C0BRC5SQF1P';
+// #internal-client-referrals — primary channel where referral summaries are posted.
+const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID || 'C0C4ZCBT32M';
+// Channels where /refer may be run: #internal-client-referrals (C0C4ZCBT32M) and the
+// legacy #internal-client-refferals (C0BRC5SQF1P). SLACK_CHANNEL_ID is always allowed.
+const ALLOWED_CHANNELS = [
+  ...new Set(
+    [SLACK_CHANNEL_ID, ...(process.env.SLACK_ALLOWED_CHANNELS || 'C0C4ZCBT32M,C0BRC5SQF1P').split(',')]
+      .map((s) => s.trim())
+      .filter(Boolean)
+  ),
+];
 // Slack users tagged on every new referral to draft and send the proposal
 // (Emil Rizwan, Sethunath, Muhammad Hisham).
 const PROPOSAL_TAG_IDS = (process.env.PROPOSAL_TAG_IDS || 'U07R06LSDL5,U0AERR4BNNB,U097VRURBQT')
@@ -360,12 +369,10 @@ async function handleSlashCommand(params, res) {
   const channelId = params.get('channel_id');
   const channelName = params.get('channel_name');
 
-  if (
-    SLACK_CHANNEL_ID &&
-    channelId !== SLACK_CHANNEL_ID &&
-    channelName !== SLACK_CHANNEL_ID &&
-    `#${channelName}` !== SLACK_CHANNEL_ID
-  ) {
+  const allowed = ALLOWED_CHANNELS.some(
+    (c) => channelId === c || channelName === c || `#${channelName}` === c
+  );
+  if (ALLOWED_CHANNELS.length && !allowed) {
     const channelDisplay = SLACK_CHANNEL_ID.startsWith('C') ? `<#${SLACK_CHANNEL_ID}>` : `#${SLACK_CHANNEL_ID}`;
     return json(res, 200, {
       response_type: 'ephemeral',
