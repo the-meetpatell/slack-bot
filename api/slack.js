@@ -70,6 +70,8 @@ const SERVICES = [
   { t: 'Fractional CFO Services', v: 'Fractional CFO Services' },
   { t: 'FTA Amendments', v: 'FTA Amendments' },
   { t: 'Golden Visa', v: 'Golden Visa' },
+  // Not yet in the Zoho picklist; Service_List accepts it and stores it as an "unused" value.
+  { t: 'Legal Advisory', v: 'Legal Advisory' },
   { t: 'License Renewal', v: 'License Renewal' },
   { t: 'Liquidation', v: 'Liquidation' },
   { t: 'Management Accounting', v: 'Management Accounting' },
