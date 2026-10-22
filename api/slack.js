@@ -8,7 +8,9 @@ const crypto = require('crypto');
 const SLACK_API = 'https://slack.com/api';
 const ACCOUNTS_URL = process.env.ZOHO_ACCOUNTS_URL || 'https://accounts.zoho.com';
 const ZOHO_API_URL = process.env.ZOHO_API_URL || 'https://www.zohoapis.com';
-const LEAD_SOURCE = process.env.LEAD_SOURCE || 'Internal Team Referral';
+// Lead_Source actual_value is "Sales Mail Alias" (display: "Internal Team Referral").
+const LEAD_SOURCE = process.env.LEAD_SOURCE || 'Sales Mail Alias';
+const LEAD_SOURCE_LABEL = process.env.LEAD_SOURCE_LABEL || 'Internal Team Referral';
 // Deals field holding the referring employee's email (synced to FinCore).
 const REFERRER_EMAIL_FIELD = process.env.REFERRER_EMAIL_FIELD || 'Referred_By_Email';
 // Pipeline actual_value is "CrossSelling Pipeline" (display: "Cross Selling Pipeline").
@@ -333,7 +335,7 @@ function confirmView(d) {
         elements: [
           {
             type: 'mrkdwn',
-            text: `Will be created as a Deal in Zoho CRM · Pipeline: ${DEAL_PIPELINE} · Stage: ${DEAL_STAGE} · Source: ${LEAD_SOURCE}`,
+            text: `Will be created as a Deal in Zoho CRM · Pipeline: ${DEAL_PIPELINE} · Stage: ${DEAL_STAGE} · Source: ${LEAD_SOURCE_LABEL}`,
           },
         ],
       },
