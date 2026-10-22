@@ -8,7 +8,9 @@ const crypto = require('crypto');
 const SLACK_API = 'https://slack.com/api';
 const ACCOUNTS_URL = process.env.ZOHO_ACCOUNTS_URL || 'https://accounts.zoho.com';
 const ZOHO_API_URL = process.env.ZOHO_API_URL || 'https://www.zohoapis.com';
-const LEAD_SOURCE = process.env.LEAD_SOURCE || 'Ops Team';
+const LEAD_SOURCE = process.env.LEAD_SOURCE || 'Internal Team Referral';
+// Deals field holding the referring employee's email (synced to FinCore).
+const REFERRER_EMAIL_FIELD = process.env.REFERRER_EMAIL_FIELD || 'Referred_By_Email';
 // Pipeline actual_value is "CrossSelling Pipeline" (display: "Cross Selling Pipeline").
 // Stage must belong to that pipeline — "Qualification" is General Sales only.
 const DEAL_STAGE = process.env.DEAL_STAGE || 'Opportunity Screening';
@@ -195,6 +197,7 @@ async function createZohoDeal(d) {
     Service_List: d.services.map((s) => s.v),
   };
   if (d.referrer) record.Internal_Referrer = d.referrer;
+  if (d.referrerEmail) record[REFERRER_EMAIL_FIELD] = d.referrerEmail;
   if (d.client) record.Referring_Client = d.client;
 
   // Owner is assigned explicitly (round-robin) — no lar_id, an assignment
@@ -219,11 +222,15 @@ async function createZohoDeal(d) {
 
 // ---------- Slack views ----------
 
-function referFormView(channelId, referrerName) {
+function referFormView(channelId, referrer) {
   return {
     type: 'modal',
     callback_id: 'lead_form',
-    private_metadata: JSON.stringify({ channel: channelId, referrer: referrerName }),
+    private_metadata: JSON.stringify({
+      channel: channelId,
+      referrer: referrer.name,
+      referrerEmail: referrer.email,
+    }),
     title: { type: 'plain_text', text: 'New Referral' },
     submit: { type: 'plain_text', text: 'Review' },
     close: { type: 'plain_text', text: 'Cancel' },
@@ -290,7 +297,7 @@ function referFormView(channelId, referrerName) {
         elements: [
           {
             type: 'mrkdwn',
-            text: `:bust_in_silhouette: Referred by *${referrerName}* — captured automatically from your Slack profile.`,
+            text: `:bust_in_silhouette: Referred by *${referrer.name}*${referrer.email ? ` (${referrer.email})` : ''} — captured automatically from your Slack profile.`,
           },
         ],
       },
@@ -317,7 +324,8 @@ function confirmView(d) {
             `*Phone:* ${d.phone}\n` +
             `*Service(s):* ${d.services.map((s) => s.t).join(', ')}\n` +
             (d.client ? `*Referring client:* ${d.client}\n` : '') +
-            `*Referred by:* ${d.referrer}`,
+            `*Referred by:* ${d.referrer}` +
+            (d.referrerEmail ? ` (${d.referrerEmail})` : ''),
         },
       },
       {
@@ -344,9 +352,12 @@ function resultView(title, message) {
 
 // ---------- handlers ----------
 
-// Best-effort full name of the sender: Slack profile (needs users:read scope),
-// falling back to the slash-command username ("meet.patel" → "Meet Patel").
-async function senderFullName(userId, userName) {
+// Best-effort full name and email of the sender from their Slack profile
+// (name needs users:read, email needs users:read.email). Name falls back to
+// the slash-command username ("meet.patel" → "Meet Patel"); email to ''.
+async function senderProfile(userId, userName) {
+  let name = '';
+  let email = '';
   try {
     // users.info is a read method — it takes URL params, not a JSON body.
     const r = await fetch(`${SLACK_API}/users.info?user=${encodeURIComponent(userId)}`, {
@@ -355,17 +366,20 @@ async function senderFullName(userId, userName) {
     const info = await r.json();
     if (info.ok) {
       const p = info.user.profile || {};
-      const name = p.real_name || p.display_name || info.user.real_name || '';
-      if (name.trim()) return name.trim();
+      name = (p.real_name || p.display_name || info.user.real_name || '').trim();
+      email = (p.email || '').trim();
     }
   } catch {
     // fall through to username fallback
   }
-  return (userName || '')
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(' ');
+  if (!name) {
+    name = (userName || '')
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map((w) => w[0].toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+  return { name, email };
 }
 
 async function handleSlashCommand(params, res) {
@@ -384,7 +398,7 @@ async function handleSlashCommand(params, res) {
     });
   }
 
-  const prefill = await senderFullName(params.get('user_id'), params.get('user_name'));
+  const prefill = await senderProfile(params.get('user_id'), params.get('user_name'));
   const open = await slackCall('views.open', {
     trigger_id: triggerId,
     view: referFormView(channelId, prefill),
@@ -436,6 +450,7 @@ async function handleViewSubmission(payload, res) {
       phone,
       services,
       referrer: meta.referrer || '',
+      referrerEmail: meta.referrerEmail || '',
       client,
       channel: meta.channel || '',
       user: payload.user.id,
