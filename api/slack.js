@@ -9,8 +9,10 @@ const SLACK_API = 'https://slack.com/api';
 const ACCOUNTS_URL = process.env.ZOHO_ACCOUNTS_URL || 'https://accounts.zoho.com';
 const ZOHO_API_URL = process.env.ZOHO_API_URL || 'https://www.zohoapis.com';
 const LEAD_SOURCE = process.env.LEAD_SOURCE || 'Ops Team';
-const DEAL_STAGE = process.env.DEAL_STAGE || 'Qualification';
-const DEAL_PIPELINE = process.env.DEAL_PIPELINE || 'General Sales';
+// Pipeline actual_value is "CrossSelling Pipeline" (display: "Cross Selling Pipeline").
+// Stage must belong to that pipeline — "Qualification" is General Sales only.
+const DEAL_STAGE = process.env.DEAL_STAGE || 'Opportunity Screening';
+const DEAL_PIPELINE = process.env.DEAL_PIPELINE || 'CrossSelling Pipeline';
 // #internal-client-referrals — primary channel where referral summaries are posted.
 const SLACK_CHANNEL_ID = process.env.SLACK_CHANNEL_ID || 'C0C4ZCBT32M';
 // Channels where /refer may be run: #internal-client-referrals (C0C4ZCBT32M) and the
